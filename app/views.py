@@ -8,9 +8,11 @@ from .validators import (
     validate_password,
     validate_email,
     validate_unique_email,
-    
 )
-from .db_queries import db_insert_one
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from .db_queries import db_insert_one, db_get_one, db_update_one
 
 
 @app.route("/admin", methods=["POST"])
@@ -84,3 +86,30 @@ def register_admin():
         return "done"
     else:
         return jsonify({"error_message": "something went wrong"}), 500
+    
+@app.route("/login", methods=["POST"])
+def login_user():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error_message": "Credentials not provided"}), 400
+    if "email" not in data:
+        return jsonify({"error_message": "email not provided"}), 400
+    if "password" not in data:
+        return jsonify({"error_message": "password not provided"}), 400
+    email = data["email"]
+    password = data["password"]
+    if validate_unique_email(email=email) == True:  # check whether email exists in db
+        return jsonify({"error_message": "User with this email doesn't exist"}), 400
+    query = "SELECT * FROM user WHERE email=?"
+    param = (email,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify({"error_message": "User with this email doesn't exist"}), 400
+    bcrypt = Bcrypt(app)
+    hashed_password_user = user[4]  # password is in 5th column of user table
+    if bcrypt.check_password_hash(hashed_password_user, password) == False:
+        return jsonify({"error_message": "Please enter correct credentials"}), 400
+    access_token = create_access_token(identity=email)
+    return jsonify(
+        access_token=access_token, is_admin=True if user[5] == True else False
+    )
