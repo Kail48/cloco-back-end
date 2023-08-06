@@ -9,6 +9,7 @@ from .validators import (
     validate_password,
     validate_email,
     validate_unique_email,
+    has_all_user_data
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -19,36 +20,8 @@ from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one,d
 @app.route("/admin", methods=["POST"])
 def register_admin():
     data = request.get_json()
-
-    # check if all required fields are present
-    if data["email"] is None:
-        message = {"error_message": "email is required"}
-        return jsonify(message), 400
-    if data["password"] is None:
-        message = {"error_message": "password is required"}
-        return jsonify(message), 400
-    if data["password2"] is None:
-        message = {"error_message": "password2 is required"}
-        return jsonify(message), 400
-    if data["first_name"] is None:
-        message = {"error_message": "first name is required"}
-        return jsonify(message), 400
-    if data["last_name"] is None:
-        message = {"error_message": "last name is required"}
-        return jsonify(message), 400
-    if data["address"] is None:
-        message = {"error_message": "address is required"}
-        return jsonify(message), 400
-    if data["dob"] is None:
-        message = {"error_message": "date of birth is required"}
-        return jsonify(message), 400
-    if data["phone"] is None:
-        message = {"error_message": "phone is required"}
-        return jsonify(message), 400
-    if data["gender"] is None:
-        message = {"error_message": "gender is required"}
-        return jsonify(message), 400
-
+    if has_all_user_data(data)!=True:
+        return jsonify(error_message=has_all_user_data(data))
     # validate special form datas
     if validate_email(data["email"]) == False:
         message = {"error_message": "enter a valid email address"}
@@ -132,38 +105,13 @@ def protected():
 @app.route("/user", methods=["POST"])
 @jwt_required()
 @admin_required
-def register_user():
+def create_user():
 
     data = request.get_json()
 
     # check if all required fields are present
-    if data["email"] is None:
-        message = {"error_message": "email is required"}
-        return jsonify(message), 400
-    if data["password"] is None:
-        message = {"error_message": "password is required"}
-        return jsonify(message), 400
-    if data["password2"] is None:
-        message = {"error_message": "password2 is required"}
-        return jsonify(message), 400
-    if data["first_name"] is None:
-        message = {"error_message": "first name is required"}
-        return jsonify(message), 400
-    if data["last_name"] is None:
-        message = {"error_message": "last name is required"}
-        return jsonify(message), 400
-    if data["address"] is None:
-        message = {"error_message": "address is required"}
-        return jsonify(message), 400
-    if data["dob"] is None:
-        message = {"error_message": "date of birth is required"}
-        return jsonify(message), 400
-    if data["phone"] is None:
-        message = {"error_message": "phone is required"}
-        return jsonify(message), 400
-    if data["gender"] is None:
-        message = {"error_message": "gender is required"}
-        return jsonify(message), 400
+    if has_all_user_data(data)!=True:
+        return jsonify(error_message=has_all_user_data(data))
 
     # validate special form datas
     if validate_email(data["email"]) == False:
@@ -256,3 +204,52 @@ def get_users():
     if result is None:
         return jsonify(error_message="database error"),500
     return jsonify(result),200
+
+@app.route("/artist", methods=["POST"])
+@jwt_required()
+@admin_required
+def create_artist():
+
+    data = request.get_json()
+    print("here")
+    # check if all required fields are present
+    if "name" not in data:
+        message = {"error_message": "email is required"}
+        return jsonify(message), 400
+
+    if "address" not in data:
+        message = {"error_message": "address is required"}
+        return jsonify(message), 400
+    if "dob" not in data:
+        message = {"error_message": "date of birth is required"}
+        return jsonify(message), 400
+    if "first_release_year" not in data.keys():
+        message = {"error_message": "first_release_year is required"}
+        return jsonify(message), 400
+
+    
+    if "gender" not in data:
+        message = {"error_message": "gender is required"}
+        return jsonify(message), 400
+
+   
+    created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = """INSERT INTO user(name,dob, gender, address, first_release_year,no_of_albums_released, created_at, updated_at)
+    VALUES (?,?,?,?,?,?,?,?);"""
+    insert_data = (
+        data["name"],
+        data["dob"],
+        data["gender"],
+        data["address"],
+        data["first_release_year"],
+        0,
+        created_at,
+        None,
+    )
+    print("sql")
+    execute_query = db_insert_one(query=query, insert_data=insert_data)
+    if execute_query:
+    
+        return jsonify(message="successfully created new artist",email=data['email']),200
+    else:
+        return jsonify({"error_message": "something went wrong"}), 500
