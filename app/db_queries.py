@@ -79,7 +79,7 @@ def db_delete_one(query, param):
             connection.close()
     return result
 
-
+#returns users in respective page, note*:only non admin users are selected
 def db_get_all_users(page):
     items_per_page = 5
     offset = (page - 1) * items_per_page
@@ -94,7 +94,7 @@ def db_get_all_users(page):
         total_pages = math.ceil(total_users / items_per_page)
         print("tp ",total_pages)
         #get users with offset
-        query = "SELECT * FROM user LIMIT ? OFFSET ?"
+        query = "SELECT id, first_name, last_name, email, phone, dob, gender, address, created_at, is_admin FROM user WHERE is_admin = 0 LIMIT ? OFFSET ?"
         cur.execute(query, (items_per_page, offset))
         #convert tuple data into dictionary of records
         columns = [col[0] for col in cur.description]
@@ -104,6 +104,7 @@ def db_get_all_users(page):
         cur.close()
 
     except sqlite3.Error as error:
+        print("error occured",error)
         return None
     finally:
         if connection:
