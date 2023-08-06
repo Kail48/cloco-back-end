@@ -1,10 +1,10 @@
 import sqlite3
-from ..init_db import DATABASE_NAME
+from app import Database
 
 # this function executes a single INSERT query, returns true if the process is successful
 def db_insert_one(query, insert_data):
     try:
-        connection = sqlite3.connect(DATABASE_NAME)
+        connection = sqlite3.connect(Database.name)
 
         cur = connection.cursor()
 
@@ -25,7 +25,7 @@ def db_insert_one(query, insert_data):
 def db_get_one(query, param):
     user=None
     try:
-        connection = sqlite3.connect(DATABASE_NAME)
+        connection = sqlite3.connect(Database.name)
 
         cur = connection.cursor()
 
@@ -41,7 +41,7 @@ def db_get_one(query, param):
     return result
 def db_update_one(query, param):
     try:
-        connection = sqlite3.connect(DATABASE_NAME)
+        connection = sqlite3.connect(Database.name)
 
         cur = connection.cursor()
 
