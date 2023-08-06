@@ -1,6 +1,6 @@
 # Flask Project Name
 
-A simple Flask project for tracking and managing tasks.
+A simple Flask project for managing artists.
 
 ![Project Demo](demo.gif) <!-- Replace with a link to your project demo video or GIF -->
 
@@ -10,20 +10,21 @@ A simple Flask project for tracking and managing tasks.
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+
 
 ## Description
 
-This Flask project provides a web-based interface for users to track and manage their tasks. It uses the Flask framework for the backend and HTML/CSS for the frontend. Users can add, edit, and mark tasks as completed.
+This Flask project provides an api for artist management system. It uses the Flask framework for the backend. Users(admins) can add, edit, and delete artists and their records. The user features haven't been implemented although creation of user accounts is possible through an admin. There is a simplistic jwt authentication implementation for token based authentication. The use of ORM has been completely avoided and the data is stored in sqlite3 database which is manipulated through raw sql queries.
+
+### Why flask?
+I chose flask over Django because this project requires pure sql implementation, Using Django without ORM just increases the bundle size of the project specially for small projects like this.
 
 ## Features
 
-- User registration and authentication
-- Add new tasks
-- Edit existing tasks
-- Mark tasks as completed
-- User-friendly interface
+- Admin registration and authentication
+- Add new users as admin(users themselves cannot register)
+- Edit existing users and artists
+- CSV import and export for artists
 
 ## Installation
 
@@ -45,20 +46,5 @@ To run this project locally, follow these steps:
 3. Register a new user account or log in if you already have one.
 4. Use the interface to add, edit, and manage your tasks.
 
-## Contributing
 
-We welcome contributions from the community! To contribute to this project:
 
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit them: `git commit -m "Add your feature"`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Create a pull request describing your changes.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-Feel free to customize this template according to your project's specific details and requirements. Replace the placeholders with actual information, URLs, and instructions. Happy coding!
