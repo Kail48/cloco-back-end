@@ -3,6 +3,7 @@ from flask import request, jsonify
 import datetime
 import sqlite3
 from flask_bcrypt import Bcrypt
+from .decorators import admin_required
 from .validators import (
     validate_password_match,
     validate_password,
@@ -120,6 +121,7 @@ def login_user():
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user_email = get_jwt_identity()
+    
     query = "SELECT * FROM user WHERE email=?"
     param = (current_user_email,)
     user = db_get_one(query=query, param=param)
@@ -129,15 +131,9 @@ def protected():
 
 @app.route("/user", methods=["POST"])
 @jwt_required()
+@admin_required
 def register_user():
-    current_user_email = get_jwt_identity()
-    query = "SELECT * FROM user WHERE email=?"
-    param = (current_user_email,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
-        return jsonify(error_message="please login again")
-    if user[5] == False:  # check if the user is admin
-        return jsonify(error_message="admin privilege required"), 401
+
     data = request.get_json()
 
     # check if all required fields are present
@@ -210,15 +206,8 @@ def register_user():
     
 @app.route("/user/<id>", methods=["PUT"])
 @jwt_required()
+@admin_required
 def update_user(id):
-    current_user_email = get_jwt_identity() #identify user through token
-    query = "SELECT * FROM user WHERE email=?"
-    param = (current_user_email,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
-        return jsonify(error_message="please login again")
-    if user[5] == False:  # check if the user is admin
-        return jsonify(error_message="admin privilege required"), 401
     if request.get_json() is None:
         return jsonify(error_message="Please provide data to update"),400
     #check if user with given id exists
@@ -243,15 +232,8 @@ def update_user(id):
 
 @app.route("/user/<id>", methods=["DELETE"])
 @jwt_required()
+@admin_required
 def delete_user(id):
-    current_user_email = get_jwt_identity() #identify user through token
-    query = "SELECT * FROM user WHERE email=?"
-    param = (current_user_email,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
-        return jsonify(error_message="please login again")
-    if user[5] == False:  # check if the user is admin
-        return jsonify(error_message="admin privilege required"), 401
     #check if user with given id exists
     query = "SELECT * FROM user WHERE id=?"
     param = (id,)
@@ -266,16 +248,9 @@ def delete_user(id):
     return jsonify(message="successfully deleted",id=id),200
 @app.route("/users")
 @jwt_required()
+@admin_required
 def get_users():
     page = request.args.get('page', default=1, type=int)
-    current_user_email = get_jwt_identity() #identify user through token
-    query = "SELECT * FROM user WHERE email=?"
-    param = (current_user_email,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
-        return jsonify(error_message="please login again")
-    if user[5] == False:  # check if the user is admin
-        return jsonify(error_message="admin privilege required"), 401
     #check if user with given id exists
     result=db_get_all_users(page=page)
     if result is None:
