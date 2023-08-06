@@ -113,3 +113,16 @@ def login_user():
     return jsonify(
         access_token=access_token, is_admin=True if user[5] == True else False
     )
+
+# a protected route to verify if user is admin
+@app.route("/admin/verify", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user_email = get_jwt_identity()
+    query = "SELECT * FROM user WHERE email=?"
+    param = (current_user_email,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="please login again"), 400
+    return jsonify(is_admin=True if user[5] == True else False), 200
