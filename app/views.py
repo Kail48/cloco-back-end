@@ -12,7 +12,7 @@ from .validators import (
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one
+from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one,db_get_all_users
 
 
 @app.route("/admin", methods=["POST"])
@@ -221,6 +221,12 @@ def update_user(id):
         return jsonify(error_message="admin privilege required"), 401
     if request.get_json() is None:
         return jsonify(error_message="Please provide data to update"),400
+    #check if user with given id exists
+    query = "SELECT * FROM user WHERE id=?"
+    param = (id,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="The user with provided id doesn't exist")
     data=request.get_json()
     for key in data:
         
@@ -228,7 +234,11 @@ def update_user(id):
         param=(data[key],id)
         if db_update_one(query=query,param=param)==False:
             return jsonify(error_message="something wrong"),400
-    
+    updated_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = f"UPDATE user SET updated_at = ? WHERE id = ? "
+    param=(updated_at,id)
+    if db_update_one(query=query,param=param)==False:
+            return jsonify(error_message="something wrong"),400
     return jsonify(message="successfully updated",id=id),200
 
 @app.route("/user/<id>", methods=["DELETE"])
@@ -257,6 +267,7 @@ def delete_user(id):
 @app.route("/users")
 @jwt_required()
 def get_users():
+    page = request.args.get('page', default=1, type=int)
     current_user_email = get_jwt_identity() #identify user through token
     query = "SELECT * FROM user WHERE email=?"
     param = (current_user_email,)
@@ -266,6 +277,7 @@ def get_users():
     if user[5] == False:  # check if the user is admin
         return jsonify(error_message="admin privilege required"), 401
     #check if user with given id exists
-    
-    
-    return jsonify(message="successfully deleted",id=id),200
+    result=db_get_all_users(page=page)
+    if result is None:
+        return jsonify(error_message="database error"),500
+    return jsonify(result),200
