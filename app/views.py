@@ -4,7 +4,7 @@ import datetime
 import sqlite3
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
-from .utils import user_exists
+from .utils import user_exists,artist_exists
 from .validators import (
     validate_password_match,
     validate_password,
@@ -180,7 +180,6 @@ def update_user(id):
 @admin_required
 def delete_user(id):
     #check if user with given id exists
-    
     if user_exists(id)==False:
         return jsonify(error_message="The user with provided id doesn't exist")
     query = f"DELETE FROM user WHERE id = ? "
@@ -213,3 +212,26 @@ def create_artist():
         return jsonify(message="created new artist"),200
     else:
         return jsonify(error_message="something went wrong"),500
+    
+@app.route("/artist/<id>", methods=["PUT"])
+@jwt_required()
+@admin_required
+def update_artist(id):
+    if request.get_json() is None:
+        return jsonify(error_message="Please provide data to update"),400
+    #check if user with given id exists
+    if artist_exists(id)==False:
+        return jsonify(error_message="The artist with provided id doesn't exist"),400
+
+    data=request.get_json()
+    for key in data: 
+        query = f"UPDATE artist SET {key} = ? WHERE id = ? "
+        param=(data[key],id)
+        if db_update_one(query=query,param=param)==False:
+            return jsonify(error_message="something wrong"),400
+    updated_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = f"UPDATE artist SET updated_at = ? WHERE id = ? "
+    param=(updated_at,id)
+    if db_update_one(query=query,param=param)==False:
+            return jsonify(error_message="something wrong"),400
+    return jsonify(message="successfully updated",id=id),200

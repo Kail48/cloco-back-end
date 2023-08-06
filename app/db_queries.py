@@ -2,7 +2,7 @@ import sqlite3
 from app import Database
 import json
 import math
-
+import datetime
 
 # this function executes a single INSERT query, returns true if the process is successful
 def db_insert_one(query, insert_data):
@@ -12,7 +12,7 @@ def db_insert_one(query, insert_data):
         cur = connection.cursor()
 
         cur.execute(query, insert_data)
-
+        print(cur.lastrowid)
         connection.commit()
         cur.close()
 
@@ -32,7 +32,6 @@ def db_get_one(query, param):
         cur = connection.cursor()
 
         result = cur.execute(query, param).fetchone()
-        connection.commit()
         cur.close()
 
     except sqlite3.Error as error:
@@ -100,7 +99,6 @@ def db_get_all_users(page):
         columns = [col[0] for col in cur.description]
         print("columns ", columns)
         result = [dict(zip(columns, row)) for row in cur.fetchall()]
-        
         cur.close()
 
     except sqlite3.Error as error:
@@ -110,3 +108,43 @@ def db_get_all_users(page):
         if connection:
             connection.close()
     return {"users":result,"total_pages":total_pages}
+
+def db_get_artist(id):
+    try:
+        connection = sqlite3.connect(Database.name)
+
+        cur = connection.cursor()
+
+        cur.execute("SELECT * FROM artist WHERE id = ?",(id,))
+        columns = [col[0] for col in cur.description]
+        artist=dict(zip(columns,cur.fetchone()))
+        print(artist)
+        cur.close()
+
+    except sqlite3.Error as error:
+        return None
+    finally:
+        if connection:
+            connection.close()
+    return artist
+
+def insert_new_artist(data):
+    created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = """INSERT INTO artist(name,dob, gender, address, first_release_year,number_of_albums_released, created_at, updated_at)
+    VALUES (?,?,?,?,?,?,?,?);"""
+    insert_data = (
+        data["name"],
+        data["dob"],
+        data["gender"],
+        data["address"],
+        data["first_release_year"],
+        0,
+        created_at,
+        None,
+    )
+    print("sql")
+    execute_query = db_insert_one(query=query, insert_data=insert_data)
+    if execute_query:
+        return True
+    else:
+        return False
