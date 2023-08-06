@@ -4,25 +4,34 @@ import datetime
 import sqlite3
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
-from .utils import user_exists,artist_exists
+from .utils import user_exists, artist_exists
 from .validators import (
     validate_password_match,
     validate_password,
     validate_email,
     validate_unique_email,
     has_all_user_data,
-    has_all_artist_data
+    has_all_artist_data,
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one,db_get_all_users,db_get_artist,insert_new_artist
+from .db_queries import (
+    db_insert_one,
+    db_get_one,
+    db_update_one,
+    db_delete_one,
+    db_get_all_users,
+    db_get_artist,
+    insert_new_artist,
+    db_get_all_artists,
+)
 
 
 @app.route("/admin", methods=["POST"])
 def register_admin():
     data = request.get_json()
-    if has_all_user_data(data)!=True:
+    if has_all_user_data(data) != True:
         return jsonify(error_message=has_all_user_data(data))
     # validate special form datas
     if validate_email(data["email"]) == False:
@@ -59,10 +68,14 @@ def register_admin():
     )
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
-        return jsonify(message="successfully created admin user",email=data['email']),200
+        return (
+            jsonify(message="successfully created admin user", email=data["email"]),
+            200,
+        )
     else:
         return jsonify({"error_message": "something went wrong"}), 500
-    
+
+
 @app.route("/login", methods=["POST"])
 def login_user():
     data = request.get_json()
@@ -90,13 +103,14 @@ def login_user():
         access_token=access_token, is_admin=True if user[5] == True else False
     )
 
+
 # a protected route to verify if user is admin
 @app.route("/admin/verify", methods=["GET"])
 @jwt_required()
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user_email = get_jwt_identity()
-    
+
     query = "SELECT * FROM user WHERE email=?"
     param = (current_user_email,)
     user = db_get_one(query=query, param=param)
@@ -104,13 +118,14 @@ def protected():
         return jsonify(error_message="please login again"), 400
     return jsonify(is_admin=True if user[5] == True else False), 200
 
+
 @app.route("/user", methods=["POST"])
 @jwt_required()
 @admin_required
 def create_user():
     data = request.get_json()
     # check if all required fields are present
-    if has_all_user_data(data)!=True:
+    if has_all_user_data(data) != True:
         return jsonify(error_message=has_all_user_data(data))
     # validate special form datas
     if validate_email(data["email"]) == False:
@@ -147,57 +162,64 @@ def create_user():
     )
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
-        return jsonify(message="successfully created new user",email=data['email']),200
+        return (
+            jsonify(message="successfully created new user", email=data["email"]),
+            200,
+        )
     else:
         return jsonify({"error_message": "something went wrong"}), 500
-    
+
+
 @app.route("/user/<id>", methods=["PUT"])
 @jwt_required()
 @admin_required
 def update_user(id):
     if request.get_json() is None:
-        return jsonify(error_message="Please provide data to update"),400
-    #check if user with given id exists
-    if user_exists(id)==False:
-        return jsonify(error_message="The user with provided id doesn't exist"),400
+        return jsonify(error_message="Please provide data to update"), 400
+    # check if user with given id exists
+    if user_exists(id) == False:
+        return jsonify(error_message="The user with provided id doesn't exist"), 400
 
-    data=request.get_json()
+    data = request.get_json()
     for key in data:
-        
         query = f"UPDATE user SET {key} = ? WHERE id = ? "
-        param=(data[key],id)
-        if db_update_one(query=query,param=param)==False:
-            return jsonify(error_message="something wrong"),400
+        param = (data[key], id)
+        if db_update_one(query=query, param=param) == False:
+            return jsonify(error_message="something wrong"), 400
     updated_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     query = f"UPDATE user SET updated_at = ? WHERE id = ? "
-    param=(updated_at,id)
-    if db_update_one(query=query,param=param)==False:
-            return jsonify(error_message="something wrong"),400
-    return jsonify(message="successfully updated",id=id),200
+    param = (updated_at, id)
+    if db_update_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+    return jsonify(message="successfully updated", id=id), 200
+
 
 @app.route("/user/<id>", methods=["DELETE"])
 @jwt_required()
 @admin_required
 def delete_user(id):
-    #check if user with given id exists
-    if user_exists(id)==False:
+    # check if user with given id exists
+    if user_exists(id) == False:
         return jsonify(error_message="The user with provided id doesn't exist")
     query = f"DELETE FROM user WHERE id = ? "
-    param=(id,)
-    if db_delete_one(query=query,param=param)==False:
-        return jsonify(error_message="something wrong"),400
-    
-    return jsonify(message="successfully deleted",id=id),200
+    param = (id,)
+    if db_delete_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+
+    return jsonify(message="successfully deleted", id=id), 200
+
+
 @app.route("/users")
 @jwt_required()
 @admin_required
 def get_users():
-    page = request.args.get('page', default=1, type=int)
-    #check if user with given id exists
-    result=db_get_all_users(page=page)
+    page = request.args.get("page", default=1, type=int)
+    # check if user with given id exists
+    result = db_get_all_users(page=page)
     if result is None:
-        return jsonify(error_message="database error"),500
-    return jsonify(result),200
+        return jsonify(error_message="database error"), 500
+    return jsonify(result), 200
+
 
 @app.route("/artist", methods=["POST"])
 @jwt_required()
@@ -206,46 +228,59 @@ def create_artist():
     data = request.get_json()
     print("here")
     # check if all required fields are present
-    if has_all_artist_data(data)["result"]==False:
+    if has_all_artist_data(data)["result"] == False:
         return jsonify(has_all_artist_data(data)["error_message"])
-    if insert_new_artist(data)==True:
-        return jsonify(message="created new artist"),200
+    if insert_new_artist(data) == True:
+        return jsonify(message="created new artist"), 200
     else:
-        return jsonify(error_message="something went wrong"),500
-    
+        return jsonify(error_message="something went wrong"), 500
+
+
 @app.route("/artist/<id>", methods=["PUT"])
 @jwt_required()
 @admin_required
 def update_artist(id):
     if request.get_json() is None:
-        return jsonify(error_message="Please provide data to update"),400
-    #check if user with given id exists
-    if artist_exists(id)==False:
-        return jsonify(error_message="The artist with provided id doesn't exist"),400
+        return jsonify(error_message="Please provide data to update"), 400
+    # check if user with given id exists
+    if artist_exists(id) == False:
+        return jsonify(error_message="The artist with provided id doesn't exist"), 400
 
-    data=request.get_json()
-    for key in data: 
+    data = request.get_json()
+    for key in data:
         query = f"UPDATE artist SET {key} = ? WHERE id = ? "
-        param=(data[key],id)
-        if db_update_one(query=query,param=param)==False:
-            return jsonify(error_message="something wrong"),400
+        param = (data[key], id)
+        if db_update_one(query=query, param=param) == False:
+            return jsonify(error_message="something wrong"), 400
     updated_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     query = f"UPDATE artist SET updated_at = ? WHERE id = ? "
-    param=(updated_at,id)
-    if db_update_one(query=query,param=param)==False:
-            return jsonify(error_message="something wrong"),400
-    return jsonify(message="successfully updated",id=id),200
+    param = (updated_at, id)
+    if db_update_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+    return jsonify(message="successfully updated", id=id), 200
+
 
 @app.route("/artist/<id>", methods=["DELETE"])
 @jwt_required()
 @admin_required
 def delete_artist(id):
-    #check if user with given id exists
-    if artist_exists(id)==False:
+    # check if user with given id exists
+    if artist_exists(id) == False:
         return jsonify(error_message="The artist with provided id doesn't exist")
     query = f"DELETE FROM artist WHERE id = ? "
-    param=(id,)
-    if db_delete_one(query=query,param=param)==False:
-        return jsonify(error_message="something wrong"),400
-    
-    return jsonify(message="successfully deleted",id=id),200
+    param = (id,)
+    if db_delete_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+
+    return jsonify(message="successfully deleted", id=id), 200
+
+
+@app.route("/artists")
+@jwt_required()
+@admin_required
+def get_artists():
+    page = request.args.get("page", default=1, type=int)
+    result = db_get_all_artists(page=page)
+    if result is None:
+        return jsonify(error_message="database error"), 500
+    return jsonify(result), 200

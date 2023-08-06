@@ -91,7 +91,6 @@ def db_get_all_users(page):
         cur.execute(query_total)
         total_users = cur.fetchone()[0]
         total_pages = math.ceil(total_users / items_per_page)
-        print("tp ",total_pages)
         #get users with offset
         query = "SELECT id, first_name, last_name, email, phone, dob, gender, address, created_at, is_admin FROM user WHERE is_admin = 0 LIMIT ? OFFSET ?"
         cur.execute(query, (items_per_page, offset))
@@ -102,7 +101,7 @@ def db_get_all_users(page):
         cur.close()
 
     except sqlite3.Error as error:
-        print("error occured",error)
+
         return None
     finally:
         if connection:
@@ -148,3 +147,32 @@ def insert_new_artist(data):
         return True
     else:
         return False
+
+def db_get_all_artists(page):
+    items_per_page = 5
+    offset = (page - 1) * items_per_page
+    try:
+        connection = sqlite3.connect(Database.name)
+
+        cur = connection.cursor()
+        #calculate total pages using all the records and items per page
+        query_total = "SELECT COUNT(*) FROM artist"
+        cur.execute(query_total)
+        total_artist = cur.fetchone()[0]
+        total_pages = math.ceil(total_artist / items_per_page)
+        #get users with offset
+        query = "SELECT id, name,dob,first_release_year, number_of_albums_released, gender, address, created_at FROM artist LIMIT ? OFFSET ?"
+        cur.execute(query, (items_per_page, offset))
+        #convert tuple data into dictionary of records
+        columns = [col[0] for col in cur.description]
+        print("columns ", columns)
+        result = [dict(zip(columns, row)) for row in cur.fetchall()]
+        cur.close()
+
+    except sqlite3.Error as error:
+
+        return None
+    finally:
+        if connection:
+            connection.close()
+    return {"artist":result,"total_pages":total_pages}
