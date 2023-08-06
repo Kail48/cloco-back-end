@@ -1,5 +1,5 @@
 import sqlite3
-DATABASE_NAME="cloco_db"
+DATABASE_NAME="cloco_db" #is to be used across the app to connect to database
 def initialize_database():
     conn = sqlite3.connect(DATABASE_NAME)
     c = conn.cursor()
