@@ -4,6 +4,7 @@ import datetime
 import sqlite3
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
+from .utils import user_exists
 from .validators import (
     validate_password_match,
     validate_password,
@@ -157,11 +158,9 @@ def update_user(id):
     if request.get_json() is None:
         return jsonify(error_message="Please provide data to update"),400
     #check if user with given id exists
-    query = "SELECT * FROM user WHERE id=?"
-    param = (id,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
-        return jsonify(error_message="The user with provided id doesn't exist")
+    if user_exists(id)==False:
+        return jsonify(error_message="The user with provided id doesn't exist"),400
+
     data=request.get_json()
     for key in data:
         
@@ -181,10 +180,8 @@ def update_user(id):
 @admin_required
 def delete_user(id):
     #check if user with given id exists
-    query = "SELECT * FROM user WHERE id=?"
-    param = (id,)
-    user = db_get_one(query=query, param=param)
-    if user is None:
+    
+    if user_exists(id)==False:
         return jsonify(error_message="The user with provided id doesn't exist")
     query = f"DELETE FROM user WHERE id = ? "
     param=(id,)
