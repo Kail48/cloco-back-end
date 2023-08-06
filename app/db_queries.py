@@ -147,8 +147,9 @@ def insert_new_artist(data):
         return True
     else:
         return False
-
-def db_get_all_artists(page):
+    
+#get artists per page
+def db_get_all_artists_with_page(page):
     items_per_page = 5
     offset = (page - 1) * items_per_page
     try:
@@ -176,3 +177,24 @@ def db_get_all_artists(page):
         if connection:
             connection.close()
     return {"artist":result,"total_pages":total_pages}
+
+#get all artists from database as dictionary
+def db_get_all_artists():
+    try:
+        connection = sqlite3.connect(Database.name)
+        cur = connection.cursor()
+        query = "SELECT id, name,dob,first_release_year, number_of_albums_released, gender, address, created_at FROM artist"
+        cur.execute(query)
+        #convert tuple data into dictionary of records
+        columns = [col[0] for col in cur.description]
+        print("columns ", columns)
+        result = [dict(zip(columns, row)) for row in cur.fetchall()]
+        cur.close()
+
+    except sqlite3.Error as error:
+
+        return None
+    finally:
+        if connection:
+            connection.close()
+    return result

@@ -1,7 +1,6 @@
 from app import app
 from flask import request, jsonify
-import datetime
-import sqlite3
+import datetime,csv,io
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
 from .utils import user_exists, artist_exists
@@ -23,8 +22,9 @@ from .db_queries import (
     db_delete_one,
     db_get_all_users,
     db_get_artist,
-    insert_new_artist,
     db_get_all_artists,
+    insert_new_artist,
+    db_get_all_artists_with_page,
 )
 
 
@@ -280,7 +280,43 @@ def delete_artist(id):
 @admin_required
 def get_artists():
     page = request.args.get("page", default=1, type=int)
-    result = db_get_all_artists(page=page)
+    result = db_get_all_artists_with_page(page=page)
     if result is None:
         return jsonify(error_message="database error"), 500
     return jsonify(result), 200
+
+@app.route("/artists/csv")
+@jwt_required()
+@admin_required
+def generate_artist_csv():
+    data = db_get_all_artists()
+    if data is None:
+        return jsonify(error_message="database error"), 500
+    try:
+        # Create an in-memory file object
+        csv_output = io.StringIO()
+        csv_writer = csv.DictWriter(csv_output, fieldnames=data[0].keys())
+        csv_writer.writeheader()
+        csv_writer.writerows(data)
+        
+        # Get the CSV content from the in-memory file
+        csv_content = csv_output.getvalue()
+        
+        # Close the in-memory file
+        csv_output.close()
+        
+        # Create a response with CSV content
+        response = app.response_class(
+            response=csv_content,
+            status=200,
+            mimetype='text/csv'
+        )
+        
+        # Set the filename for download
+        response.headers.set('Content-Disposition', 'attachment', filename='artists.csv')
+        
+        return response
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+   
