@@ -15,7 +15,7 @@ from .validators import (
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one,db_get_all_users
+from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one,db_get_all_users,db_get_artist,insert_new_artist
 
 
 @app.route("/admin", methods=["POST"])
@@ -107,13 +107,10 @@ def protected():
 @jwt_required()
 @admin_required
 def create_user():
-
     data = request.get_json()
-
     # check if all required fields are present
     if has_all_user_data(data)!=True:
         return jsonify(error_message=has_all_user_data(data))
-
     # validate special form datas
     if validate_email(data["email"]) == False:
         message = {"error_message": "enter a valid email address"}
@@ -210,31 +207,12 @@ def get_users():
 @jwt_required()
 @admin_required
 def create_artist():
-
     data = request.get_json()
     print("here")
     # check if all required fields are present
     if has_all_artist_data(data)["result"]==False:
         return jsonify(has_all_artist_data(data)["error_message"])
-
-   
-    created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    query = """INSERT INTO artist(name,dob, gender, address, first_release_year,number_of_albums_released, created_at, updated_at)
-    VALUES (?,?,?,?,?,?,?,?);"""
-    insert_data = (
-        data["name"],
-        data["dob"],
-        data["gender"],
-        data["address"],
-        data["first_release_year"],
-        0,
-        created_at,
-        None,
-    )
-    print("sql")
-    execute_query = db_insert_one(query=query, insert_data=insert_data)
-    if execute_query:
-    
-        return jsonify(message="successfully created new artist",),200
+    if insert_new_artist(data)==True:
+        return jsonify(message="created new artist"),200
     else:
-        return jsonify({"error_message": "something went wrong"}), 500
+        return jsonify(error_message="something went wrong"),500
