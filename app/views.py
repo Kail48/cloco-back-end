@@ -12,7 +12,7 @@ from .validators import (
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from .db_queries import db_insert_one, db_get_one, db_update_one
+from .db_queries import db_insert_one, db_get_one, db_update_one,db_delete_one
 
 
 @app.route("/admin", methods=["POST"])
@@ -83,7 +83,7 @@ def register_admin():
     )
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
-        return "done"
+        return jsonify(message="successfully created admin user",email=data['email']),200
     else:
         return jsonify({"error_message": "something went wrong"}), 500
     
@@ -204,6 +204,68 @@ def register_user():
     )
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
-        return "done"
+        return jsonify(message="successfully created new user",email=data['email']),200
     else:
         return jsonify({"error_message": "something went wrong"}), 500
+    
+@app.route("/user/<id>", methods=["PUT"])
+@jwt_required()
+def update_user(id):
+    current_user_email = get_jwt_identity() #identify user through token
+    query = "SELECT * FROM user WHERE email=?"
+    param = (current_user_email,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="please login again")
+    if user[5] == False:  # check if the user is admin
+        return jsonify(error_message="admin privilege required"), 401
+    if request.get_json() is None:
+        return jsonify(error_message="Please provide data to update"),400
+    data=request.get_json()
+    for key in data:
+        
+        query = f"UPDATE user SET {key} = ? WHERE id = ? "
+        param=(data[key],id)
+        if db_update_one(query=query,param=param)==False:
+            return jsonify(error_message="something wrong"),400
+    
+    return jsonify(message="successfully updated",id=id),200
+
+@app.route("/user/<id>", methods=["DELETE"])
+@jwt_required()
+def delete_user(id):
+    current_user_email = get_jwt_identity() #identify user through token
+    query = "SELECT * FROM user WHERE email=?"
+    param = (current_user_email,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="please login again")
+    if user[5] == False:  # check if the user is admin
+        return jsonify(error_message="admin privilege required"), 401
+    #check if user with given id exists
+    query = "SELECT * FROM user WHERE id=?"
+    param = (id,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="The user with provided id doesn't exist")
+    query = f"DELETE FROM user WHERE id = ? "
+    param=(id,)
+    if db_delete_one(query=query,param=param)==False:
+        return jsonify(error_message="something wrong"),400
+    
+    return jsonify(message="successfully deleted",id=id),200
+@app.route("/users")
+@jwt_required()
+def get_users():
+    current_user_email = get_jwt_identity() #identify user through token
+    query = "SELECT * FROM user WHERE email=?"
+    param = (current_user_email,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return jsonify(error_message="please login again")
+    if user[5] == False:  # check if the user is admin
+        return jsonify(error_message="admin privilege required"), 401
+    #check if user with given id exists
+    
+    
+    return jsonify(message="successfully deleted",id=id),200
