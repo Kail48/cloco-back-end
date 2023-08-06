@@ -235,3 +235,17 @@ def update_artist(id):
     if db_update_one(query=query,param=param)==False:
             return jsonify(error_message="something wrong"),400
     return jsonify(message="successfully updated",id=id),200
+
+@app.route("/artist/<id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_artist(id):
+    #check if user with given id exists
+    if artist_exists(id)==False:
+        return jsonify(error_message="The artist with provided id doesn't exist")
+    query = f"DELETE FROM artist WHERE id = ? "
+    param=(id,)
+    if db_delete_one(query=query,param=param)==False:
+        return jsonify(error_message="something wrong"),400
+    
+    return jsonify(message="successfully deleted",id=id),200
