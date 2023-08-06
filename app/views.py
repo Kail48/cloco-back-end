@@ -9,7 +9,8 @@ from .validators import (
     validate_password,
     validate_email,
     validate_unique_email,
-    has_all_user_data
+    has_all_user_data,
+    has_all_artist_data
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -213,28 +214,12 @@ def create_artist():
     data = request.get_json()
     print("here")
     # check if all required fields are present
-    if "name" not in data:
-        message = {"error_message": "email is required"}
-        return jsonify(message), 400
-
-    if "address" not in data:
-        message = {"error_message": "address is required"}
-        return jsonify(message), 400
-    if "dob" not in data:
-        message = {"error_message": "date of birth is required"}
-        return jsonify(message), 400
-    if "first_release_year" not in data.keys():
-        message = {"error_message": "first_release_year is required"}
-        return jsonify(message), 400
-
-    
-    if "gender" not in data:
-        message = {"error_message": "gender is required"}
-        return jsonify(message), 400
+    if has_all_artist_data(data)["result"]==False:
+        return jsonify(has_all_artist_data(data)["error_message"])
 
    
     created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    query = """INSERT INTO user(name,dob, gender, address, first_release_year,no_of_albums_released, created_at, updated_at)
+    query = """INSERT INTO artist(name,dob, gender, address, first_release_year,number_of_albums_released, created_at, updated_at)
     VALUES (?,?,?,?,?,?,?,?);"""
     insert_data = (
         data["name"],
@@ -250,6 +235,6 @@ def create_artist():
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
     
-        return jsonify(message="successfully created new artist",email=data['email']),200
+        return jsonify(message="successfully created new artist",),200
     else:
         return jsonify({"error_message": "something went wrong"}), 500

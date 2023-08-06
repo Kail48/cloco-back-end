@@ -35,3 +35,46 @@ def validate_unique_email(email):
         return False
     else:
         return True
+#return true if all data present else return error message
+def has_all_user_data(data):
+    if "email" not in data:
+        return "email is required"
+
+    if "password" not in data:
+        return "password is required"
+
+    if "password2" not in data:
+        return "password2 is required"
+
+    if "first_name" not in data:
+        return "first name is required"
+
+    if "last_name" not in data:
+        return "last name is required"
+
+    if "address" not in data:
+        return "address is required"
+
+    if "dob" not in data:
+        return "date of birth is required"
+
+    if "phone" not in data:
+        return "phone is required"
+
+    if "gender" not in data:
+        return "gender is required"
+    return True
+#returns a dict containing result of validation and message to show if validation failed
+def has_all_artist_data(data):
+    if "name" not in data:
+        return {"result":False,"error_message": "email is required"}
+
+    if "address" not in data:
+        return {"result":False,"error_message": "address is required"}
+    if "dob" not in data:
+        return {"result":False,"error_message": "date of birth is required"}
+    if "first_release_year" not in data.keys():
+        return {"result":False,"error_message": "first_release_year is required"}
+    if "gender" not in data:
+        return {"result":False,"error_message": "gender is required"}
+    return {"result":True}
