@@ -3,7 +3,7 @@ from flask import request, jsonify
 import datetime,csv,io
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
-from .utils import user_exists, artist_exists,artist_csv_to_dictionary
+from .utils import user_exists, artist_exists,artist_csv_to_dictionary,music_exists
 from .validators import (
     validate_password_match,
     validate_password,
@@ -403,3 +403,30 @@ def create_music():
         return jsonify(message="created new music"), 200
     else:
         return jsonify(error_message="something went wrong"), 500
+
+@app.route("/music/<id>", methods=["PUT"])
+@jwt_required()
+@admin_required
+def update_music(id):
+    if request.get_json() is None:
+        return jsonify(error_message="Please provide data to update"), 400
+    # check if user with given id exists
+    if music_exists(id) == False:
+        return jsonify(error_message="The music with provided id doesn't exist"), 400
+
+    data = request.get_json()
+    if "genre" in data:
+        if is_valid_music_genre(data["genre"])==False:
+         return jsonify(error_message="The genre isnt accepted, please select from :'rnb', 'jazz', 'country', 'rock', 'classic'"), 400
+   
+    for key in data:
+        query = f"UPDATE music SET {key} = ? WHERE id = ? "
+        param = (data[key], id)
+        if db_update_one(query=query, param=param) == False:
+            return jsonify(error_message="something wrong"), 400
+    updated_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = f"UPDATE music SET updated_at = ? WHERE id = ? "
+    param = (updated_at, id)
+    if db_update_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+    return jsonify(message="successfully updated music", id=id), 200
