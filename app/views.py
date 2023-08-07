@@ -3,7 +3,7 @@ from flask import request, jsonify
 import datetime,csv,io
 from flask_bcrypt import Bcrypt
 from .decorators import admin_required
-from .utils import user_exists, artist_exists
+from .utils import user_exists, artist_exists,artist_csv_to_dictionary
 from .validators import (
     validate_password_match,
     validate_password,
@@ -11,6 +11,7 @@ from .validators import (
     validate_unique_email,
     has_all_user_data,
     has_all_artist_data,
+    file_is_csv,
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -25,6 +26,7 @@ from .db_queries import (
     db_get_all_artists,
     insert_new_artist,
     db_get_all_artists_with_page,
+    insert_artist_bulk
 )
 
 
@@ -285,38 +287,56 @@ def get_artists():
         return jsonify(error_message="database error"), 500
     return jsonify(result), 200
 
-@app.route("/artists/csv")
+@app.route("/artists/csv",methods=["GET","POST"])
 @jwt_required()
 @admin_required
 def generate_artist_csv():
-    data = db_get_all_artists()
-    if data is None:
-        return jsonify(error_message="database error"), 500
-    try:
-        # Create an in-memory file object
-        csv_output = io.StringIO()
-        csv_writer = csv.DictWriter(csv_output, fieldnames=data[0].keys())
-        csv_writer.writeheader()
-        csv_writer.writerows(data)
-        
-        # Get the CSV content from the in-memory file
-        csv_content = csv_output.getvalue()
-        
-        # Close the in-memory file
-        csv_output.close()
-        
-        # Create a response with CSV content
-        response = app.response_class(
-            response=csv_content,
-            status=200,
-            mimetype='text/csv'
-        )
-        
-        # Set the filename for download
-        response.headers.set('Content-Disposition', 'attachment', filename='artists.csv')
-        
-        return response
+    if request.method=="GET":
+        data = db_get_all_artists()
+        if data is None:
+            return jsonify(error_message="database error"), 500
+        try:
+            # Create an in-memory file object
+            csv_output = io.StringIO()
+            csv_writer = csv.DictWriter(csv_output, fieldnames=data[0].keys())
+            csv_writer.writeheader()
+            csv_writer.writerows(data)
+            
+            # Get the CSV content from the in-memory file
+            csv_content = csv_output.getvalue()
+            
+            # Close the in-memory file
+            csv_output.close()
+            
+            # Create a response with CSV content
+            response = app.response_class(
+                response=csv_content,
+                status=200,
+                mimetype='text/csv'
+            )
+            
+            # Set the filename for download
+            response.headers.set('Content-Disposition', 'attachment', filename='artists.csv')
+            
+            return response
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    if request.method=="POST":
+        #check if the file is present
+        if 'file' not in request.files:
+            return jsonify(error_message="No file Provided"), 400
+        file = request.files['file']
+        #check if the file is empty
+        if file.filename == '':
+            return jsonify(error_message="No file selected"), 400
+        if file_is_csv(file)==False:
+            return jsonify(error_message="only csv files are supported"), 400
+        artist_list=artist_csv_to_dictionary(file)
+        if artist_list is None: #returns false if csv has invalid data
+            return jsonify(error_message="CSV file has unsanitized data"), 400
+        db_execute=insert_artist_bulk(artist_list=artist_list)
+        if db_execute==False:
+            return jsonify(error_message="failed to save data"), 500
+        return jsonify(message="successfully added artists")   
    
