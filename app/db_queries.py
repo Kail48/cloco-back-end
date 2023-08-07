@@ -198,3 +198,33 @@ def db_get_all_artists():
         if connection:
             connection.close()
     return result
+#takes in list of dictionary containing artist data
+def insert_artist_bulk(artist_list):
+    created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    query = """INSERT INTO artist(name,dob, gender, address, first_release_year,number_of_albums_released, created_at, updated_at)
+    VALUES (?,?,?,?,?,?,?,?);"""
+    try:
+        connection = sqlite3.connect(Database.name)
+        cur = connection.cursor()
+        for artist in artist_list:
+            insert_data = (
+            artist["name"],
+            artist["dob"],
+            artist["gender"],
+            artist["address"],
+            artist["first_release_year"],
+            0,
+            created_at,
+            None,
+            )
+            cur.execute(query, insert_data)
+
+        connection.commit()
+                
+    except sqlite3.Error as error:
+            print(error)
+            return False
+    finally:
+        if connection:
+            connection.close()
+    return True
