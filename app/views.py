@@ -430,3 +430,17 @@ def update_music(id):
     if db_update_one(query=query, param=param) == False:
         return jsonify(error_message="something wrong"), 400
     return jsonify(message="successfully updated music", id=id), 200
+
+@app.route("/music/<id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_music(id):
+    # check if music with given id exists
+    if music_exists(id) == False:
+        return jsonify(error_message="The music with provided id doesn't exist")
+    query = f"DELETE FROM music WHERE id = ? "
+    param = (id,)
+    if db_delete_one(query=query, param=param) == False:
+        return jsonify(error_message="something wrong"), 400
+
+    return jsonify(message="successfully deleted", id=id), 200
