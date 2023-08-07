@@ -30,21 +30,22 @@ I chose flask over Django because this project requires pure sql implementation,
 
 To run this project locally, follow these steps:
 
-1. Clone this repository: `git clone https://github.com/your-username/task-tracker.git`
-2. Navigate to the project directory: `cd task-tracker`
+1. Clone this repository: `git clone https://github.com/Kail48/cloco-back-end.git`
+2. Navigate to the project directory: `cd cloco-back-end`
 3. Create a virtual environment: `python -m venv venv`
 4. Activate the virtual environment:
    - On Windows: `venv\Scripts\activate`
    - On macOS and Linux: `source venv/bin/activate`
 5. Install project dependencies: `pip install -r requirements.txt`
-6. Run the application: `python app.py`
+6. Run the script to initialize the database: `python init_db.py`
+6. Run the application: `python main.py`
 
 ## Usage
 
-1. Start the application: `python app.py`
+1. Start the application: `python main.py`
 2. Open your web browser and go to: `http://localhost:5000`
-3. Register a new user account or log in if you already have one.
-4. Use the interface to add, edit, and manage your tasks.
+
+more description will be added soon
 
 
 
