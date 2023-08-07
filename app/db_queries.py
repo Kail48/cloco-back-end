@@ -228,10 +228,11 @@ def insert_artist_bulk(artist_list):
         if connection:
             connection.close()
     return True
+
 def insert_new_music(data):
     created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     query = """INSERT INTO music(artist_id,title,album_name,genre,created_at, updated_at)
-    VALUES (?,?,?,?,?,?,?,?);"""
+    VALUES (?,?,?,?,?,?);"""
     insert_data = (
         data["artist_id"],
         data["title"],
