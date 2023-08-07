@@ -124,3 +124,9 @@ def is_valid_music_genre(genre):
         return True
     else:
         return False
+def is_valid_gender_data(gender):
+    valid_genders=('M','F', 'O')
+    if gender in valid_genders:
+        return True
+    else:
+        return False
