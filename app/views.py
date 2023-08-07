@@ -12,6 +12,10 @@ from .validators import (
     has_all_user_data,
     has_all_artist_data,
     file_is_csv,
+    has_all_music_data,
+    is_valid_music_genre,
+    is_valid_date,
+    is_year
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -26,7 +30,8 @@ from .db_queries import (
     db_get_all_artists,
     insert_new_artist,
     db_get_all_artists_with_page,
-    insert_artist_bulk
+    insert_artist_bulk,
+    insert_new_music
 )
 
 
@@ -50,6 +55,9 @@ def register_admin():
     if validate_password_match(data["password"], data["password2"]) == False:
         message = {"error_message": "passwords do not match"}
         return jsonify(message), 400
+    if is_valid_date(data["dob"])==False:
+        message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+        return jsonify(message), 400
     bcrypt = Bcrypt(app)  # for password hashing
     hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
     created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -58,7 +66,7 @@ def register_admin():
     insert_data = (
         data["first_name"],
         data["last_name"],
-        data["email"],
+        data["email"].lower(),
         hashed_password,
         data["phone"],
         data["dob"],
@@ -87,7 +95,7 @@ def login_user():
         return jsonify({"error_message": "email not provided"}), 400
     if "password" not in data:
         return jsonify({"error_message": "password not provided"}), 400
-    email = data["email"]
+    email = data["email"].lower()
     password = data["password"]
     if validate_unique_email(email=email) == True:  # check whether email exists in db
         return jsonify({"error_message": "User with this email doesn't exist"}), 400
@@ -144,6 +152,8 @@ def create_user():
     if validate_password_match(data["password"], data["password2"]) == False:
         message = {"error_message": "passwords do not match"}
         return jsonify(message), 400
+    if is_valid_date(data["dob"])==False:
+        message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
     bcrypt = Bcrypt(app)  # for password hashing
     hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
     created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -152,7 +162,7 @@ def create_user():
     insert_data = (
         data["first_name"],
         data["last_name"],
-        data["email"],
+        data["email"].lower(),
         hashed_password,
         data["phone"],
         data["dob"],
@@ -165,7 +175,7 @@ def create_user():
     execute_query = db_insert_one(query=query, insert_data=insert_data)
     if execute_query:
         return (
-            jsonify(message="successfully created new user", email=data["email"]),
+            jsonify(message="successfully created new user", email=data["email"].lower()),
             200,
         )
     else:
@@ -181,8 +191,12 @@ def update_user(id):
     # check if user with given id exists
     if user_exists(id) == False:
         return jsonify(error_message="The user with provided id doesn't exist"), 400
-
+    
     data = request.get_json()
+    if "dob" in data:
+        if is_valid_date(data["dob"])==False:
+            message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+            return jsonify(message), 400
     for key in data:
         query = f"UPDATE user SET {key} = ? WHERE id = ? "
         param = (data[key], id)
@@ -232,6 +246,11 @@ def create_artist():
     # check if all required fields are present
     if has_all_artist_data(data)["result"] == False:
         return jsonify(has_all_artist_data(data)["error_message"])
+    if is_year(str(data["first_release_year"]))==False:
+        return jsonify(message="first_release_year is not a valid year"), 400
+    if is_valid_date(data["dob"])==False:
+            message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+            return jsonify(message), 400
     if insert_new_artist(data) == True:
         return jsonify(message="created new artist"), 200
     else:
@@ -249,6 +268,13 @@ def update_artist(id):
         return jsonify(error_message="The artist with provided id doesn't exist"), 400
 
     data = request.get_json()
+    if "dob" in data:
+        if is_valid_date(data["dob"])==False:
+            message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+            return jsonify(message), 400
+    if "first_release_year" in data:
+         if is_year(str(data["first_release_year"]))==False:
+            return jsonify(message="first_release_year is not a valid year"), 400
     for key in data:
         query = f"UPDATE artist SET {key} = ? WHERE id = ? "
         param = (data[key], id)
@@ -340,3 +366,22 @@ def generate_artist_csv():
             return jsonify(error_message="failed to save data"), 500
         return jsonify(message="successfully added artists")   
    
+@app.route("/music", methods=["POST"])
+@jwt_required()
+@admin_required
+def create_music():
+    data = request.get_json()
+    
+    # check if all required fields are present
+    if has_all_music_data(data)["result"] == False:
+        return jsonify(has_all_artist_data(data)["error_message"])
+    #check if artist provided is in the database
+    if artist_exists(data["artist_id"])==False:
+        return jsonify(error_message="the artist with given id doesn't exist"), 400
+    #check if genre is valid
+    if is_valid_music_genre(data["genre"])==False:
+         return jsonify(error_message="The genre isnt accepted, please select from :'rnb', 'jazz', 'country', 'rock', 'classic'"), 400
+    if insert_new_music(data) == True:
+        return jsonify(message="created new music"), 200
+    else:
+        return jsonify(error_message="something went wrong"), 500
