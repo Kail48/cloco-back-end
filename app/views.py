@@ -15,7 +15,8 @@ from .validators import (
     has_all_music_data,
     is_valid_music_genre,
     is_valid_date,
-    is_year
+    is_year,
+    is_valid_gender_data
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -57,6 +58,9 @@ def register_admin():
         return jsonify(message), 400
     if is_valid_date(data["dob"])==False:
         message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+        return jsonify(message), 400
+    if is_valid_gender_data(data["gender"])==False:
+        message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
         return jsonify(message), 400
     bcrypt = Bcrypt(app)  # for password hashing
     hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
@@ -152,6 +156,9 @@ def create_user():
     if validate_password_match(data["password"], data["password2"]) == False:
         message = {"error_message": "passwords do not match"}
         return jsonify(message), 400
+    if is_valid_gender_data(data["gender"])==False:
+        message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
+        return jsonify(message), 400
     if is_valid_date(data["dob"])==False:
         message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
     bcrypt = Bcrypt(app)  # for password hashing
@@ -196,6 +203,10 @@ def update_user(id):
     if "dob" in data:
         if is_valid_date(data["dob"])==False:
             message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+            return jsonify(message), 400
+    if "gender" in data:
+        if is_valid_gender_data(data["gender"])==False:
+            message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
             return jsonify(message), 400
     for key in data:
         query = f"UPDATE user SET {key} = ? WHERE id = ? "
@@ -242,7 +253,7 @@ def get_users():
 @admin_required
 def create_artist():
     data = request.get_json()
-    print("here")
+    
     # check if all required fields are present
     if has_all_artist_data(data)["result"] == False:
         return jsonify(has_all_artist_data(data)["error_message"])
@@ -251,6 +262,9 @@ def create_artist():
     if is_valid_date(data["dob"])==False:
             message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
             return jsonify(message), 400
+    if is_valid_gender_data(data["gender"])==False:
+        message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
+        return jsonify(message), 400
     if insert_new_artist(data) == True:
         return jsonify(message="created new artist"), 200
     else:
@@ -275,6 +289,10 @@ def update_artist(id):
     if "first_release_year" in data:
          if is_year(str(data["first_release_year"]))==False:
             return jsonify(message="first_release_year is not a valid year"), 400
+    if "gender" in data:
+        if is_valid_gender_data(data["gender"])==False:
+            message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
+            return jsonify(message), 400
     for key in data:
         query = f"UPDATE artist SET {key} = ? WHERE id = ? "
         param = (data[key], id)
