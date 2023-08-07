@@ -8,7 +8,6 @@ A simple Flask project for managing artists.
 
 - [Description](#description)
 - [Features](#features)
-- [API Documentation](#Api Documnetation)
 - [Installation](#installation)
 - [Usage](#usage)
 
