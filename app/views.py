@@ -33,7 +33,8 @@ from .db_queries import (
     db_get_all_artists_with_page,
     insert_artist_bulk,
     insert_new_music,
-    db_get_all_music_for_an_artist
+    db_get_all_music_for_an_artist,
+    db_delete_all_music_for_an_artist
 )
 
 
@@ -318,8 +319,11 @@ def delete_artist(id):
     param = (id,)
     if db_delete_one(query=query, param=param) == False:
         return jsonify(error_message="something wrong"), 400
-
-    return jsonify(message="successfully deleted", id=id), 200
+    #delete music by the artist from db
+    deleted_music_for_artist=db_delete_all_music_for_an_artist(id)
+    if deleted_music_for_artist is None:
+        deleted_music_for_artist=0
+    return jsonify(message=f"successfully deleted artist and {str(deleted_music_for_artist)} songs", id=id), 200
 
 
 @app.route("/artists")
