@@ -117,3 +117,10 @@ def has_all_music_data(data):
     if "album_name" not in data.keys():
         return {"result":False,"error_message": "album_name is required"}
     return {"result":True}
+
+def is_valid_music_genre(genre):
+    valid_genres=('rnb', 'jazz', 'country', 'rock', 'classic')
+    if genre in valid_genres:
+        return True
+    else:
+        return False
