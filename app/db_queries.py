@@ -1,8 +1,5 @@
-import sqlite3
+import sqlite3,json,math,datetime
 from app import Database
-import json
-import math
-import datetime
 
 # this function executes a single INSERT query, returns true if the process is successful
 def db_insert_one(query, insert_data):
@@ -247,3 +244,24 @@ def insert_new_music(data):
         return True
     else:
         return False
+
+def db_get_all_music_for_an_artist(artist_id):
+    try:
+        connection = sqlite3.connect(Database.name)
+        cur = connection.cursor()
+        query = "SELECT id, title,album_name,genre created_at FROM music WHERE artist_id = ?"
+        param=(artist_id,)
+        cur.execute(query,param)
+        #convert tuple data into dictionary of records
+        columns = [col[0] for col in cur.description]
+        print("columns ", columns)
+        result = [dict(zip(columns, row)) for row in cur.fetchall()]
+        cur.close()
+
+    except sqlite3.Error as error:
+
+        return None
+    finally:
+        if connection:
+            connection.close()
+    return result
