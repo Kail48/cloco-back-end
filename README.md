@@ -38,7 +38,8 @@ To run this project locally, follow these steps:
    - On macOS and Linux: `source venv/bin/activate`
 5. Install project dependencies: `pip install -r requirements.txt`
 6. Run the script to initialize the database: `python init_db.py`
-6. Run the application: `python main.py`
+7. Go into app folder and get your absolute path for the folder called 'uploaded files', paste it into app config upload folder path. 
+8. Run the application: `python main.py`
 
 ## Usage
 
