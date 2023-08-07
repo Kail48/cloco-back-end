@@ -26,6 +26,9 @@ I chose flask over Django because this project requires pure sql implementation,
 - Edit existing users and artists
 - CSV import and export for artists
 
+##Api Documnetation
+[Check full doc](https://documenter.getpostman.com/view/25345798/2s9Xxztryz)
+
 ## Installation
 
 To run this project locally, follow these steps:
