@@ -50,3 +50,10 @@ def artist_csv_to_dictionary(file):
     #delete the file from server after operation is complete
     os.remove(filepath)
     return artist_list
+
+def music_exists(id):
+    query = "SELECT * FROM music WHERE id=?"
+    param = (id,)
+    user = db_get_one(query=query, param=param)
+    if user is None:
+        return False
