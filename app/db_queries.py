@@ -265,3 +265,22 @@ def db_get_all_music_for_an_artist(artist_id):
         if connection:
             connection.close()
     return result
+
+def db_delete_all_music_for_an_artist(artist_id):
+    try:
+        connection = sqlite3.connect(Database.name)
+        cur = connection.cursor()
+        query = "DELETE FROM music WHERE artist_id = ?"
+        param=(artist_id,)
+        cur.execute(query,param)
+        connection.commit()
+        result=cur.rowcount
+        cur.close()
+
+    except sqlite3.Error as error:
+
+        return None
+    finally:
+        if connection:
+            connection.close()
+    return result
