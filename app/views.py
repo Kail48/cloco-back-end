@@ -32,7 +32,8 @@ from .db_queries import (
     insert_new_artist,
     db_get_all_artists_with_page,
     insert_artist_bulk,
-    insert_new_music
+    insert_new_music,
+    db_get_all_music_for_an_artist
 )
 
 
@@ -444,3 +445,17 @@ def delete_music(id):
         return jsonify(error_message="something wrong"), 400
 
     return jsonify(message="successfully deleted", id=id), 200
+
+@app.route("/musics")
+@jwt_required()
+@admin_required
+def get_musics():
+    if(request.args.get("artist_id",type=int)) is None:
+        return jsonify(error_message="please provide artist id"), 400
+    artist_id=request.args.get("artist_id",type=int)
+    if artist_exists(artist_id)==False:
+        return jsonify(error_message="The artist with provided id doesn't exist")
+    result = db_get_all_music_for_an_artist(artist_id=artist_id)
+    if result is None:
+        return jsonify(error_message="database error"), 500
+    return jsonify(result), 200
