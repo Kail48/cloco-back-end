@@ -1,8 +1,10 @@
-from .db_queries import db_get_one
-from .validators import is_year,is_valid_date
 import csv,os
-from werkzeug.utils import secure_filename
 from app import app
+from .validators import is_year,is_valid_date
+
+from werkzeug.utils import secure_filename
+
+from .db_queries import db_get_one
 def user_exists(id):
     query = "SELECT * FROM user WHERE id=?"
     param = (id,)
