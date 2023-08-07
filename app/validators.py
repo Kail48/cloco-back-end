@@ -1,5 +1,4 @@
-import re
-import sqlite3
+import sqlite3,pathlib,re
 from .db_queries import db_get_one
 
 def validate_password_match(password1,password2):
@@ -78,3 +77,11 @@ def has_all_artist_data(data):
     if "gender" not in data:
         return {"result":False,"error_message": "gender is required"}
     return {"result":True}
+
+def file_is_csv(file):
+    file_extension = pathlib.Path(file.filename).suffix
+    print("extension is ",file_extension)
+    if file_extension==".csv":
+        return True
+    else:
+        return False
