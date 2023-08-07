@@ -106,3 +106,14 @@ def is_valid_date(date_string):
         return True
     except ValueError:
         return False   
+def has_all_music_data(data):
+    if "artist_id" not in data:
+        return {"result":False,"error_message": "artist_id is required"}
+
+    if "title" not in data:
+        return {"result":False,"error_message": "title is required"}
+    if "genre" not in data:
+        return {"result":False,"error_message": "genre is required"}
+    if "album_name" not in data.keys():
+        return {"result":False,"error_message": "album_name is required"}
+    return {"result":True}
