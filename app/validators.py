@@ -85,3 +85,18 @@ def file_is_csv(file):
         return True
     else:
         return False
+#takes in string and returns false if it is not a year
+def is_year(data):
+    if len(data)!=4:
+        return False
+    #all year strings can be converted to int
+    try:
+        int(data)
+    except:
+        return False
+    #reject float values
+    if "." in data:
+        return False
+    return True
+
+        
