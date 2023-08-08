@@ -79,12 +79,13 @@ def db_delete_one(query, param):
 def db_get_all_users(page):
     items_per_page = 5
     offset = (page - 1) * items_per_page
+
     try:
         connection = sqlite3.connect(Database.name)
 
         cur = connection.cursor()
         #calculate total pages using all the records and items per page
-        query_total = "SELECT COUNT(*) FROM user"
+        query_total = "SELECT COUNT(*) FROM user WHERE is_admin = 0"
         cur.execute(query_total)
         total_users = cur.fetchone()[0]
         total_pages = math.ceil(total_users / items_per_page)
