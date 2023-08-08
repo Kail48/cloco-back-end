@@ -37,12 +37,15 @@ from .db_queries import (
     db_delete_all_music_for_an_artist
 )
 
+@app.route("/test")
+def test():
+    return jsonify(message="connected to server")
 
 @app.route("/admin", methods=["POST"])
 def register_admin():
     data = request.get_json()
     if has_all_user_data(data) != True:
-        return jsonify(error_message=has_all_user_data(data))
+        return jsonify(error_message=has_all_user_data(data)),400
     # validate special form datas
     if validate_email(data["email"]) == False:
         message = {"error_message": "enter a valid email address"}
@@ -95,6 +98,7 @@ def register_admin():
 @app.route("/login", methods=["POST"])
 def login_user():
     data = request.get_json()
+    print(data)
     if not data:
         return jsonify({"error_message": "Credentials not provided"}), 400
     if "email" not in data:
@@ -229,7 +233,7 @@ def update_user(id):
 def delete_user(id):
     # check if user with given id exists
     if user_exists(id) == False:
-        return jsonify(error_message="The user with provided id doesn't exist")
+        return jsonify(error_message="The user with provided id doesn't exist"),400
     query = f"DELETE FROM user WHERE id = ? "
     param = (id,)
     if db_delete_one(query=query, param=param) == False:
