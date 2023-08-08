@@ -131,3 +131,13 @@ def is_valid_gender_data(gender):
         return True
     else:
         return False
+def is_int(data):
+
+    try:
+        int(data)
+    except:
+        return False
+    #reject float values
+    if "." in data:
+        return False
+    return True
