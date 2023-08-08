@@ -68,7 +68,8 @@ def has_all_user_data(data):
 def has_all_artist_data(data):
     if "name" not in data:
         return {"result":False,"error_message": "email is required"}
-
+    if "number_of_albums_released" not in data:
+         return {"result":False,"error_message": "debut year is required"}
     if "address" not in data:
         return {"result":False,"error_message": "address is required"}
     if "dob" not in data:
