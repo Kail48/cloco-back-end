@@ -251,7 +251,7 @@ def db_get_all_music_for_an_artist(artist_id):
     try:
         connection = sqlite3.connect(Database.name)
         cur = connection.cursor()
-        query = "SELECT id, title,album_name,genre created_at FROM music WHERE artist_id = ?"
+        query = "SELECT id, title,album_name,genre,created_at FROM music WHERE artist_id = ?"
         param=(artist_id,)
         cur.execute(query,param)
         #convert tuple data into dictionary of records
