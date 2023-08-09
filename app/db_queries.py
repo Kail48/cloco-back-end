@@ -135,7 +135,7 @@ def insert_new_artist(data):
         data["gender"],
         data["address"],
         data["first_release_year"],
-        0,
+        data["number_of_albums_released"],
         created_at,
         None,
     )
@@ -205,13 +205,14 @@ def insert_artist_bulk(artist_list):
         connection = sqlite3.connect(Database.name)
         cur = connection.cursor()
         for artist in artist_list:
+            
             insert_data = (
             artist["name"],
             artist["dob"],
             artist["gender"],
             artist["address"],
             artist["first_release_year"],
-            0,
+            artist["number_of_albums_released"],
             created_at,
             None,
             )

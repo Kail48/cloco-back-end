@@ -16,7 +16,8 @@ from .validators import (
     is_valid_music_genre,
     is_valid_date,
     is_year,
-    is_valid_gender_data
+    is_valid_gender_data,
+    is_int
 )
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -267,6 +268,9 @@ def create_artist():
         return jsonify(message="first_release_year is not a valid year"), 400
     if is_valid_date(data["dob"])==False:
             message = {"error_message": "Date format not valid. valid date format is YYYY-MM-DD"}
+            return jsonify(message), 400
+    if is_int(data["number_of_albums_released"])==False:
+            message = {"error_message": "Number of albums should be number"}
             return jsonify(message), 400
     if is_valid_gender_data(data["gender"])==False:
         message = {"error_message": "Gender must value must be one of these: 'M','F','O'"}
