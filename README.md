@@ -2,7 +2,8 @@
 
 A simple Flask project for managing artists.
 
-![Project Demo](demo.gif) <!-- Replace with a link to your project demo video or GIF -->
+![Project Demo(with frontend)](https://cloco-music.netlify.app) 
+![Api(with frontend)](https://kailashdev.pythonanywhere.com/) 
 
 ## Table of Contents
 
@@ -50,7 +51,7 @@ To run this project locally, follow these steps:
 1. Start the application: `python main.py`
 2. Open your web browser and go to: `http://localhost:5000`
 
-more description will be added soon
+
 
 
 
